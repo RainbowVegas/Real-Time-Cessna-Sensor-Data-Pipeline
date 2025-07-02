@@ -30,10 +30,13 @@ void SensorReader::generateData() {
     std::uniform_real_distribution<> speedDist(30.0, 180.0);
     std::uniform_real_distribution<> vsiDist(-1500.0, 1500.0);
     std::uniform_real_distribution<> rpmDist(400.0, 2800.0);
-    std::uniform_real_distribution<> fuelDist(3.0, 25.0);
+    std::uniform_real_distribution<> oilPressDist(15.0, 130.0);
+    std::uniform_real_distribution<> oilTempDist(0.0, 300.0);
+    std::uniform_real_distribution<> fuelCapDist(0.0, 43.0);
+    std::uniform_real_distribution<> fuelFlowDist(3.0, 25.0);
     std::uniform_real_distribution<> pitchDist(-45.0, 45.0);
     std::uniform_real_distribution<> rollDist(-60.0, 60.0);
-
+    //2025-07-02T21:55:27Z,-5.99,4439.08,119.96,-1028.33,1019.55,251.92,118.83,3.71,-13.37,-46.67,VERTICALSPEED,OILTEMP,OILPRESSURE,FUELFLOW,ROLL
     // Print the mode of operation
     std::cout << "[Main] Starting in mode: " << mode << std::endl;
 
@@ -45,7 +48,10 @@ void SensorReader::generateData() {
             speedDist(gen),
             vsiDist(gen),
             rpmDist(gen),
-            fuelDist(gen),
+            oilPressDist(gen),
+            oilTempDist(gen),
+            fuelCapDist(gen),
+            fuelFlowDist(gen),
             pitchDist(gen),
             rollDist(gen)
         };
