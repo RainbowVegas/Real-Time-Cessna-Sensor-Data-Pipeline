@@ -72,6 +72,15 @@ The pipeline is now listening to the port, now run FlightGear. The Cessna is the
 └── README.md
 ```
 
+## Help Resources
+FlightGear:
+- https://wiki.flightgear.org/Howto:Create_a_generic_protocol#%3Coutput%3E
+- https://wiki.flightgear.org/Property_browser
+Winsock
+- https://learn.microsoft.com/en-us/windows/win32/winsock/getting-started-with-winsock
+Cessna 172 P Manual:
+- https://www.befa.org/wp-content/uploads/2019/12/POH-Cessna-172P.pdf
+
 ## License
 MIT License (include license file if applicable).
 
