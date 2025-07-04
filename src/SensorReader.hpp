@@ -13,9 +13,12 @@ public:
                  const std::string& mode,
                  std::atomic<bool>& running);
     void generateData();
+    void generateRandomData();
+    void generateFGData();
     void analyzeData();
 
 private:
+    bool parseFGData(const std::string& line, SensorData& data);
     std::queue<SensorData> dataQueue;
     std::mutex mtx;
     std::condition_variable cv;

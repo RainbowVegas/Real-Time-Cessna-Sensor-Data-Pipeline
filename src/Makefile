@@ -13,7 +13,7 @@ TARGET = sensor_pipeline
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lws2_32
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@

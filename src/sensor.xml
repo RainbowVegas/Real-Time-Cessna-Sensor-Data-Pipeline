@@ -6,6 +6,20 @@
       <var_separator>tab</var_separator>
 
       <chunk>
+         <name>temperature-F</name>
+         <node>/environment/temperature-degf</node>
+         <type>double</type>
+         <format>TC=%.6lf</format>
+      </chunk>
+
+      <chunk>
+         <name>altitude</name>
+         <node>/position/altitude-ft</node>
+         <type>double</type>
+         <format>A=%.6lf</format>
+      </chunk>
+
+      <chunk>
         <name>speed</name>
         <format>V=%.6lf</format>
         <node>/velocities/airspeed-kt</node>
@@ -27,10 +41,10 @@
       </chunk>
 
       <chunk>
-         <name>oil-temperature-F</name>
-         <node>/engines/engine/oil-temperature-degf</node>
+         <name>throttle</name>
+         <node>/controls/engines/engine/throttle</node>
          <type>double</type>
-         <format>OT=%.6lf</format>
+         <format>T=%.6lf</format>
       </chunk>
 
       <chunk>
@@ -38,6 +52,13 @@
          <node>/engines/engine/oil-pressure-psi</node>
          <type>double</type>
          <format>OP=%.6lf</format>
+      </chunk>
+
+      <chunk>
+         <name>oil-temperature-F</name>
+         <node>/engines/engine/oil-temperature-degf</node>
+         <type>double</type>
+         <format>OT=%.6lf</format>
       </chunk>
 
       <chunk>
@@ -55,24 +76,17 @@
       </chunk>
 
       <chunk>
-         <name>temperature-F</name>
-         <node>/environment/temperature-degf</node>
-         <type>double</type>
-         <format>TC=%.6lf</format>
-      </chunk>
-
-      <chunk>
-         <name>altitude above ground</name>
-         <node>/position/altitude-agl-ft</node>
-         <type>double</type>
-         <format>AAG=%.6lf</format>
-      </chunk>
-
-      <chunk>
         <name>pitch angle (deg)</name>
         <node>/orientation/pitch-deg</node>
         <type>double</type>
         <format>PA=%.6lf</format>
+      </chunk>
+
+      <chunk>
+        <name>pitch angle rate (degps)</name>
+        <node>/orientation/pitch-rate-degps</node>
+        <type>double</type>
+        <format>PR=%.6lf</format>
       </chunk>
 
       <chunk>
@@ -81,7 +95,27 @@
         <type>double</type>
         <format>RA=%.6lf</format>
       </chunk>
-      
+
+      <chunk>
+        <name>roll angle rate (degps)</name>
+        <node>/orientation/roll-rate-degps</node>
+        <type>double</type>
+        <format>RR=%.6lf</format>
+      </chunk>
+
+      <chunk>
+        <name>yaw angle (deg)</name>
+        <node>/orientation/heading-deg</node>
+        <type>double</type>
+        <format>YA=%.6lf</format>
+      </chunk>
+
+      <chunk>
+        <name>yaw angle rate (degps)</name>
+        <node>/orientation/yaw-rate-degps</node>
+        <type>double</type>
+        <format>YR=%.6lf</format>
+      </chunk>
    </output>
 </generic>
 </PropertyList>

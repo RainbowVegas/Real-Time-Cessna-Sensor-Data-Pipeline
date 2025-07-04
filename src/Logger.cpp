@@ -37,7 +37,7 @@ void Logger::log(const SensorData& data) {
         std::cerr << "Error opening file for logging." << std::endl;
         return;
     }
-
+    std::cout << "[Logger] Logging data: Temp=" << data.temperature << ", Alt=" << data.altitude << std::endl;
     //Create output file with sensor data in CSV format
     output << get_iso8601_utc()                  // Get current time in ISO 8601 format
                << std::fixed << std::setprecision(2) // Set fixed-point notation to nearest 2nd dec 80.12
@@ -46,15 +46,20 @@ void Logger::log(const SensorData& data) {
                << "," << data.speed
                << "," << data.verticalSpeed
                << "," << data.engineRPM
+               << "," << data.throttle
                << "," << data.oilPressure
                << "," << data.oilTemperature
                << "," << data.fuelCap
                << "," << data.fuelFlow
                << "," << data.pitch
-               << "," << data.roll;             
+               << "," << data.pitchRate
+               << "," << data.roll
+               << "," << data.rollRate
+               << "," << data.yaw
+               << "," << data.yawRate;             
 
-    // IF temperature is less than 80.0 C or greater than 35.0 C, add alert
-    if (data.temperature < -31.0 || data.temperature > 40.0) {
+    // IF temperature is less than -23.8 C or greater than 104.0 C, add alert
+    if (data.temperature < -23.8 || data.temperature > 104.0) {
         output << ",TEMP";
     }
     // IF altitude is greater than 13500.0 ft, add alert
@@ -90,12 +95,24 @@ void Logger::log(const SensorData& data) {
         output << ",FUELFLOW";
     }
     // IF pitch is greater than 30.0 or less than -30.0, add alert
-    if (std::abs(data.pitch) > 30.0) {
+    if (std::abs(data.pitch) > 30.0 || std::abs(data.pitch) < -30.0) {
         output << ",PITCH";
     }
+    // IF pitch rate is greater than 15.0 or less than -15.0, add alert
+    if (std::abs(data.pitchRate) > 15.0 || std::abs(data.pitchRate) < -15.0) {
+        output << ",PITCHRATE";
+    }
     // IF roll is greater than 45.0 or less than -45.0, add alert
-    if (std::abs(data.roll) > 45.0) {
+    if (std::abs(data.roll) > 45.0 || std::abs(data.roll) < -45.0) {
         output << ",ROLL";
+    }
+    // IF roll rate is greater than 25.0 or less than -25.0, add alert
+    if (std::abs(data.rollRate) > 25.0 || std::abs(data.rollRate) < -25.0) {
+        output << ",ROLLRATE";
+    }
+    // IF yaw rate is greater than 20.0 or less than -20.0, add alert
+    if (std::abs(data.yawRate) > 20.0 || std::abs(data.yawRate) < -20.0) {
+        output << ",YAWRATE";
     }
 
     // Print a newline at the end of the log entry

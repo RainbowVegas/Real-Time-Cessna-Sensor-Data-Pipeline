@@ -46,7 +46,7 @@ int main(int argc, char* argv[]){
 
     // Initialize the logger and sensor reader
     Logger logger;
-    SensorReader reader(logger, mode, running); //Generates rand sensor data
+    SensorReader reader(logger, mode, running); //Gets data from flightgear or random gen
 
     // Create threads for generating and analyzing sensor data
     std::thread sensorThread(&SensorReader::generateData, &reader);
