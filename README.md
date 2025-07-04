@@ -18,6 +18,12 @@ A multithreaded, real-time sensor data simulation, ingestion, and logging system
 - Machine learning integration for early warning signals
 - Aircraft profile selection support (e.g., Cessna, Boeing)
 
+## Dependencies
+- C++17
+- Winsock2 (Windows only)
+- FlightGear (for live mode)
+- Dear ImGui & ImPlot (for upcoming GUI support)
+
 ## How to Build
 Ensure you have a C++17 compatible compiler and `mingw32-make` for Windows:
 ```
@@ -27,7 +33,7 @@ You should also have FlightGear installed:
 ```
 https://www.flightgear.org/download/
 ```
-After it is installed your going to have to copy the sensor.xml file in the src folder to FlightGear's protocol folder
+After it is installed your going to have to copy the sensor.xml file in the src folder to FlightGear's protocol folder:
 ```
 C:\Users\user\FlightGear\Downloads\fgdata_2024_1\Protocol
 ```
@@ -38,10 +44,12 @@ When it's copied open FlightGear go to settings, additional settings, and add th
 This sets up the data that will be streamed from FlightGear to the port the sensor pipline will be listening to.
 
 ## How to Run
+After running the make file run the .exe with random or flightgear:
 ```
 ./sensor_pipeline random        # For simulated data
 ./sensor_pipeline flightgear    # For live FlightGear data
 ```
+The pipeline is now listening to the port, now run FlightGear. The Cessna is the default plane already installed on FlightGear so hit fly! 
 
 ## Example Output (CSV Format)
 ```
