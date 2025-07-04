@@ -11,17 +11,10 @@ A multithreaded, real-time sensor data simulation, ingestion, and logging system
 - Basic anomaly detection (e.g., RPM, pitch rate)
 - Thread-safe queue and condition variable system
 
-## Current Development
+## Planned Features
 - Real-time plotting using Dear ImGui and ImPlot
 - Visual alerts for abnormal sensor behavior
-- Toggleable dashboard views
 - Refined threshold logic for anomaly detection
-
-## Planned Features
-- User-configurable thresholds via GUI
-- Pause/resume streaming control
-- Exportable graph snapshots
-- Cloud syncing and telemetry upload
 - Machine learning integration for early warning signals
 - Aircraft profile selection support (e.g., Cessna, Boeing)
 
@@ -30,6 +23,19 @@ Ensure you have a C++17 compatible compiler and `mingw32-make` for Windows:
 ```
 mingw32-make
 ```
+You should also have FlightGear installed:
+```
+https://www.flightgear.org/download/
+```
+After it is installed your going to have to copy the sensor.xml file in the src folder to FlightGear's protocol folder
+```
+C:\Users\user\FlightGear\Downloads\fgdata_2024_1\Protocol
+```
+When it's copied open FlightGear go to settings, additional settings, and add this line:
+```
+--generic=socket,out,10,127.0.0.1,5500,udp,sensor
+```
+This sets up the data that will be streamed from FlightGear to the port the sensor pipline will be listening to.
 
 ## How to Run
 ```
