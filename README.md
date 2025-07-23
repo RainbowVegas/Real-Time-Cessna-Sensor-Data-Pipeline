@@ -13,7 +13,7 @@ A multithreaded, real-time sensor data simulation, ingestion, and logging system
 
 ## Planned Features
 - Real-time plotting using Dear ImGui and ImPlot - Libraries added, wokring on this feature to help improve debug and anomily logic.
-- Visual alerts for abnormal sensor behavior - On will be added to gui
+- Visual alerts for abnormal sensor behavior - Will be added to gui.
 - Refined threshold logic for anomaly detection - Overall more readable code, alerts that should only be in flight won't trigger till off the ground.
 - Machine learning integration for early warning signals
 - Aircraft profile selection support (e.g., Cessna, Boeing)
