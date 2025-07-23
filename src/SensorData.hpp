@@ -4,6 +4,7 @@
 struct SensorData {
     double temperature;    // Temperature in Farenheit
     double altitude;       // Altitude in feet
+    double agl;            // AGL in feet
     double speed;          // Speed in knots
     double verticalSpeed;  // Vertical speed in feet per minute
     double engineRPM;      // Engine RPM

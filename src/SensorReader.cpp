@@ -10,7 +10,6 @@
 #include <condition_variable> 
 
 // SensorReader class constructor
-// Initializes the SensorReader with a Logger instance.
 SensorReader::SensorReader(Logger& logger, const std::string& mode, std::atomic<bool>& running) 
 : logger(logger), mode(mode), running(running) {}
 
@@ -32,7 +31,7 @@ void SensorReader::generateData() {
     }
     // If the mode is neither "random" nor "flightgear", it prints an error message.
     else {
-        std::cerr << "[SensorReader] Unknown mode: " << mode << ". Please use 'random' or 'flightgear'.\n";
+        std::cerr << "[SensorReader] Unknown mode: " << mode << "Please use 'random' or 'flightgear'.\n";
         return;
     }
 }// End of generateData
@@ -53,6 +52,7 @@ void SensorReader::generateRandomData() {
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> tempDist(-20.0, 50.0);
     std::uniform_real_distribution<> altDist(0.0, 15000.0);
+    std::uniform_real_distribution<> aglDist(5.0, 6.0);
     std::uniform_real_distribution<> speedDist(30.0, 180.0);
     std::uniform_real_distribution<> vsiDist(-1500.0, 1500.0);
     std::uniform_real_distribution<> rpmDist(400.0, 2800.0);
@@ -73,6 +73,7 @@ void SensorReader::generateRandomData() {
         SensorData data = {
             tempDist(gen),
             altDist(gen),
+            aglDist(gen),
             speedDist(gen),
             vsiDist(gen),
             rpmDist(gen),
@@ -147,13 +148,13 @@ void SensorReader::generateFGData() {
     char buffer[1024];
     sockaddr_in senderAddr;
     int senderAddrSize = sizeof(senderAddr);
-    // Loop to keep receiving data until running is fal
+    
     while(running){
         // Receive data from the socket    
         int bytesReceived = recvfrom(udpSocket, buffer, sizeof(buffer) - 1, 0,
                                      (SOCKADDR*)&senderAddr, &senderAddrSize);
                                      
-        std::cout << "[DEBUG] Received " << bytesReceived << " bytes from FlightGear\n";
+        //std::cout << "[DEBUG] Received " << bytesReceived << " bytes from FlightGear\n";
 
         // IF the receive operation wasn't successful
         if (bytesReceived == SOCKET_ERROR) {
@@ -164,7 +165,7 @@ void SensorReader::generateFGData() {
         // Null-terminate the received data to make it a valid string
         buffer[bytesReceived] = '\0';
         std::string line(buffer);
-        std::cout << "[DEBUG] Received: " << line << std::endl;
+        //std::cout << "[DEBUG] Received: " << line << std::endl;
 
         // Parse the received data line
         SensorData data{};
@@ -172,6 +173,8 @@ void SensorReader::generateFGData() {
             std::lock_guard<std::mutex> lock(mtx);
             dataQueue.push(data);
             cv.notify_one();
+            
+            //std::cout << "[gFGData] Data Queue Size: " << dataQueue.size() << "\n";
         }
     }
 
@@ -197,69 +200,73 @@ bool SensorReader::parseFGData(const std::string& line, SensorData& data) {
     // While there are tokens in the stream
     while (stream >> token) {
         // Check if the token starts with a known prefix and parse accordingly
-        // Each token is expected to be in the format "KEY=VALUE"
-        // For example, "TC=25.0" for temperature
-        if (token.rfind("TC=", 0) == 0) {
+        
+        if (token.rfind("TF=", 0) == 0) { // Temperature in Fahrenheit
             data.temperature = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("A=", 0) == 0) {
+        else if (token.rfind("A=", 0) == 0) { // Altitude in feet
             data.altitude = std::stof(token.substr(2));
             parsed = true;
         } 
-        else if (token.rfind("V=", 0) == 0) {
+        else if (token.rfind("AGL=",0) == 0){
+            data.agl = std::stof(token.substr(4));
+            parsed = true;
+        }
+        else if (token.rfind("V=", 0) == 0) { // Speed in knots
             data.speed = std::stof(token.substr(2));
             parsed = true;
         } 
-        else if (token.rfind("VSF=", 0) == 0) {
-            data.verticalSpeed = std::stof(token.substr(4)) * 60; // Convert from feet per second to feet per minute
+        else if (token.rfind("VSF=", 0) == 0) { // Vertical speed in feet per second
+            // Convert from feet per second to feet per minute
+            data.verticalSpeed = std::stof(token.substr(4)) * 60; 
             parsed = true;
         } 
-        else if (token.rfind("ER=", 0) == 0) {
+        else if (token.rfind("ER=", 0) == 0) { // Engine RPM
             data.engineRPM = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("T=", 0) == 0) {
+        else if (token.rfind("T=", 0) == 0) { // Throttle position (0-100%)
             data.throttle = std::stof(token.substr(2));
             parsed = true;
         } 
-        else if (token.rfind("OP=", 0) == 0) {
+        else if (token.rfind("OP=", 0) == 0) { // Oil pressure in psi
             data.oilPressure = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("OT=", 0) == 0) {
+        else if (token.rfind("OT=", 0) == 0) { // Oil temperature in Fahrenheit
             data.oilTemperature = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("FCG=", 0) == 0) {
+        else if (token.rfind("FCG=", 0) == 0) { // Fuel capacity in gallons
             data.fuelCap = std::stof(token.substr(4));
             parsed = true;
         } 
-        else if (token.rfind("FFG=", 0) == 0) {
+        else if (token.rfind("FFG=", 0) == 0) { // Fuel flow in gallons per hour
             data.fuelFlow = std::stof(token.substr(4));
             parsed = true;
         } 
-        else if (token.rfind("PA=", 0) == 0) {
+        else if (token.rfind("PA=", 0) == 0) { // Pitch angle in degrees
             data.pitch = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("PR=", 0) == 0) {
+        else if (token.rfind("PR=", 0) == 0) { // Pitch rate in degrees per second
             data.pitchRate = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("RA=", 0) == 0) {
+        else if (token.rfind("RA=", 0) == 0) { // Roll angle in degrees
             data.roll = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("RR=", 0) == 0) {
+        else if (token.rfind("RR=", 0) == 0) { // Roll rate in degrees per second
             data.rollRate = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("YA=", 0) == 0) {
+        else if (token.rfind("YA=", 0) == 0) { // Yaw angle in degrees
             data.yaw = std::stof(token.substr(3));
             parsed = true;
         } 
-        else if (token.rfind("YR=", 0) == 0) {
+        else if (token.rfind("YR=", 0) == 0) { // Yaw rate in degrees per second
             data.yawRate = std::stof(token.substr(3));
             parsed = true;
         }
@@ -288,14 +295,15 @@ void SensorReader::analyzeData() {
             SensorData data = dataQueue.front();
             //Pop data from queue
             dataQueue.pop();
+            //std::cout << "[analyzeData] Data Queue Size: " << dataQueue.size() << "\n";
             // Unlock mutex
             lock.unlock();  // Allow generateData to keep pushing while logging
             // Log the data
-            logger.log(data);
+            logger.logSensorData(data);
             // Re-lock the mutex
             lock.lock();
         }
     }
 
     std::cout << "[SensorReader] Data analysis stopped.\n";
-}// End of analyzeData
+}// End of analyzeDatap
