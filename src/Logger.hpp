@@ -12,7 +12,7 @@ class Logger {
         ~Logger();                 //Deconstructor
 
          // Function to log sensor data
-        void logSensorData(const SensorData& data);
+        AlertFlags logSensorData(const SensorData& data);
         
     private:
         std::ofstream output;      // Output file stream for logging

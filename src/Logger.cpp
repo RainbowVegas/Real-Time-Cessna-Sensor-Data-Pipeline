@@ -78,8 +78,8 @@ for temperature, altitude, speed, vertical speed, engine RPM, oil temperature,
 oil pressure, fuel capacity, fuel flow, pitch, and roll.
 If any of these thresholds are exceeded, an alert is added to the log entry.
 ----------------------------------------------------------------------------------------*/
-void Logger::logSensorData(const SensorData& data) {
-    if (!output.is_open()) return;
+AlertFlags Logger::logSensorData(const SensorData& data) {
+    if (!output.is_open()) return AlertFlags{};
     //std::cout << "[Logger] Logging data: Temp=" << data.temperature << ", Alt=" << data.altitude << std::endl;
 
     //Create output file with sensor data in CSV format
@@ -89,18 +89,12 @@ void Logger::logSensorData(const SensorData& data) {
            << "," << data.altitude               
            << "," << data.speed
            << "," << data.verticalSpeed
-           << "," << data.engineRPM
-           << "," << data.throttle
-           << "," << data.oilPressure
-           << "," << data.oilTemperature
-           << "," << data.fuelCap
-           << "," << data.fuelFlow
-           << "," << data.pitch
-           << "," << data.pitchRate
-           << "," << data.roll
-           << "," << data.rollRate
-           << "," << data.yaw
-           << "," << data.yawRate;             
+           << "," << data.engineRPM << "," << data.throttle
+           << "," << data.oilPressure << "," << data.oilTemperature
+           << "," << data.fuelCap << "," << data.fuelFlow
+           << "," << data.pitch << "," << data.pitchRate
+           << "," << data.roll << "," << data.rollRate
+           << "," << data.yaw << "," << data.yawRate;             
 
     AlertFlags alerts = AlertManager::evaluate(data);
 
@@ -110,5 +104,5 @@ void Logger::logSensorData(const SensorData& data) {
     output.flush();
 
     // Return alerts
-    //return alerts
+    return alerts;
 }// End of Logger::log

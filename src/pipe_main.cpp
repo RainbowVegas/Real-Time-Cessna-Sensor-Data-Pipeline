@@ -1,5 +1,6 @@
 #include "SensorReader.hpp"
 #include "Logger.hpp"
+#include "GUI.hpp"
 #include <GLFW/glfw3.h>
 #include <thread>
 #include <windows.h>
@@ -21,6 +22,10 @@ void signalHandler(int signum) {
 int main(int argc, char* argv[]){
     //Prevent sys sleep
     SetThreadExecutionState(ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED);
+    
+    //Init gui
+    GUI gui;
+    if (!gui.init()) return -1;
 
     // Check if the correct number of arguments is provided
     if (argc < 2) {
@@ -49,8 +54,18 @@ int main(int argc, char* argv[]){
     // Create a thread for analyzing sensor data
     std::thread analyzerThread(&SensorReader::analyzeData, &reader);
 
+    // Render gui
+    while(!glfwWindowShouldClose(gui.window)){
+        gui.setLatestData(reader.getLatestData(), reader.getLatestAlerts());
+        gui.render();
+        std::this_thread::sleep_for(std::chrono::milliseconds(16));
+    }
+
     sensorThread.join();
-    analyzerThread.join();  
+    analyzerThread.join();
+    
+    //Shutdown gui
+    gui.shutdown();
 
     return 0;
 }

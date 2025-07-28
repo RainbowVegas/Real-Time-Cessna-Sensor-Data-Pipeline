@@ -72,22 +72,14 @@ void SensorReader::generateRandomData() {
     while (running) {
         SensorData data = {
             tempDist(gen),
-            altDist(gen),
-            aglDist(gen),
-            speedDist(gen),
-            vsiDist(gen),
-            rpmDist(gen),
-            throttleDist(gen),
-            oilPressDist(gen),
-            oilTempDist(gen),
-            fuelCapDist(gen),
-            fuelFlowDist(gen),
-            pitchDist(gen),
-            pitchRateDist(gen),
-            rollDist(gen),
-            rollRateDist(gen),
-            yawDist(gen),
-            yawRateDist(gen)
+            altDist(gen), aglDist(gen),
+            speedDist(gen), vsiDist(gen),
+            rpmDist(gen), throttleDist(gen),
+            oilPressDist(gen), oilTempDist(gen),
+            fuelCapDist(gen), fuelFlowDist(gen),
+            pitchDist(gen), pitchRateDist(gen),
+            rollDist(gen), rollRateDist(gen),
+            yawDist(gen), yawRateDist(gen)
         };
         // Push the generated data to the queue
         {
@@ -299,7 +291,13 @@ void SensorReader::analyzeData() {
             // Unlock mutex
             lock.unlock();  // Allow generateData to keep pushing while logging
             // Log the data
-            logger.logSensorData(data);
+            AlertFlags alerts = logger.logSensorData(data);
+            // Log to GUI
+            {
+                std::lock_guard<std::mutex> latestDataLock(dataMutex);
+                latestData = data;
+                latestAlerts = alerts;
+            }
             // Re-lock the mutex
             lock.lock();
         }
