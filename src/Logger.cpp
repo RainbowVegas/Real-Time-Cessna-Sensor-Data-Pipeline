@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <cmath>
 
+// Constructor
 Logger::Logger() {
     std::cout << "[Logger] Initializing...\n";
 
@@ -21,6 +22,7 @@ Logger::Logger() {
     }
 }
 
+// Deconstructor
 Logger::~Logger(){
     if (output.is_open()){
         output.close();

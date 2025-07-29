@@ -1,39 +1,45 @@
+// ImGui/ImPlot includes for GUI rendering
 #include "implot.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+
+// Custom data types and states
 #include "SensorData.hpp"
 #include "AlertFlags.hpp"
 
-#include <glad/glad.h>
+#include <glad/glad.h> // GLAD loader for OpenGL
 #include "GUI.hpp"
-#include <iostream>
+#include <iostream>    //for std::cerr
 
-// Window dimensions
+// Init window dimensions
 const GLuint WIDTH = 1280, HEIGHT = 720;
+// Tracks if window is open 
 bool opened;
 
 bool GUI::init() {
-    //Init GLFW
+    // Init GLFW library
     if (!glfwInit()){
         std::cerr << "Failed to initialize GLFW\n";
         return false;
     }
 
-    //Init window hints
+    // Set OpenGL version to 3.3 core profile
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    //Create window
+    //Create GLFW window
     window = glfwCreateWindow(WIDTH, HEIGHT, "Sensor Data", NULL, NULL);
     if (window == NULL){
         std::cerr << "Could not create window.\n";
         glfwTerminate();
         return false;
     }
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
 
+    glfwMakeContextCurrent(window);
+    glfwSwapInterval(1); // Enable vsync
+
+    // Load OpenGl functions using GLAD
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD\n";
         return false;
@@ -41,26 +47,33 @@ bool GUI::init() {
 
     opened = true;
     
-    std::cout << startTime << "\n";
+    // Init ImGui/ImPlot
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
+
+    //Init start time for real time plotting
     startTime = ImGui::GetTime();
+
+    //Bind ImGui/ImPlot to OpenGL
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    // Set default UI theme
     ImGui::StyleColorsDark();
 
     return true;
 }
 
 void GUI::render() {
-    glfwPollEvents();
+    glfwPollEvents(); // Process OS window events
 
+    // Start new ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    // Get the actual frame buffer size
     int display_w = WIDTH, display_h = HEIGHT;
     glfwGetFramebufferSize(window, &display_w, &display_h);
 
@@ -71,16 +84,15 @@ void GUI::render() {
     ImGui::SetNextWindowPos(ImVec2(0, 0));
     ImGui::SetNextWindowSize(ImVec2((float)display_w, (float)display_h));
 
-    // UI logic
+    // UI logic for main dash window
     if (ImGui::Begin("Sensor Dashboard", &opened,  
         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
         ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
         ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus)){
 
-        // Duration of history shown on screen (seconds)
         double currTime = ImGui::GetTime() - startTime;
 
-        // Add point safely
+        // Safely update scrolling buffers with latest data
         {
             std::lock_guard<std::mutex> lock(dataMutex);
             altitudeBuff.AddPoint((float)currTime, (float)latestData.altitude);
@@ -91,7 +103,7 @@ void GUI::render() {
             fuelFlowBuff.AddPoint((float)currTime, (float)latestData.fuelFlow);
         }
 
-        //Plot graphs
+        // Left column: flight performance graphs
         ImGui::BeginChild("LeftGraphs", ImVec2(375, 675), true);
         drawAltitudeGraph(currTime);
         drawSpeedGraph(currTime);
@@ -100,24 +112,23 @@ void GUI::render() {
 
         ImGui::SameLine();
         
+        // Middle column: engine/fuel graphs
         ImGui::BeginChild("RightGraphs", ImVec2(375, 675), true);
         drawEngineRPMGraph(currTime);
         drawOilPresGraph(currTime);
         drawFuelFlowGraph(currTime);
         ImGui::EndChild();
         
-        // Move to the right before starting the second group
-        ImGui::SameLine(0.0f, 20.0f); // Add horizontal spacing (40 pixels)
+        ImGui::SameLine(0.0f, 20.0f); // spacing
 
-        // Text data group
+        // Right panel: live numeric data
         ImGui::BeginGroup();
         drawTextData();
         ImGui::EndGroup();
 
-        // Move to the right before starting the second group
-        ImGui::SameLine(0.0f, 20.0f); // Add horizontal spacing (40 pixels)
+        ImGui::SameLine(0.0f, 20.0f); // spacing
 
-        // Anomily group
+        // Right most panel: alert statuses 
         ImGui::BeginGroup();
         drawAnomilies();
         ImGui::EndGroup();
@@ -126,13 +137,14 @@ void GUI::render() {
     ImGui::End();
     ImGui::PopStyleVar(3);
     
-    // Render everything
+    // Render final GUI output to framebuffer
     ImGui::Render();
     glViewport(0, 0, display_w, display_h);
     glClearColor(0.1f, 0.1f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
+    // Swap buffs
     glfwSwapBuffers(window);
 }
 
@@ -271,7 +283,7 @@ void GUI::drawFuelFlowGraph(double currTime){
         return;
 }
 
-// Text Data Func
+// Display numeric sensor data on screen
 void GUI::drawTextData(){
     ImGui::Text("Temperature: %.2f F", latestData.temperature);
     ImGui::Text("Oil Temperature: %.2f F", latestData.oilTemperature);
@@ -290,6 +302,7 @@ void GUI::drawTextData(){
     return;
 } 
 
+// Render all current anomaly alerts with color-coded status
 void GUI::drawAnomilies() {
     // Air Temp
     DrawAlertLine("Below Op Temp", latestAlerts.belowOperatingTemp);
@@ -337,6 +350,7 @@ void GUI::drawAnomilies() {
     DrawAlertLine("Yaw Rate Exceeded", latestAlerts.yawRateExceeded);
 }
 
+// Helper to render a single alert line with color depending on status
 void GUI::DrawAlertLine(const char* label, bool triggered) {
     ImU32 color = triggered ? IM_COL32(255, 0, 0, 255) : IM_COL32(255, 255, 255, 255);
     ImGui::PushStyleColor(ImGuiCol_Text, color);

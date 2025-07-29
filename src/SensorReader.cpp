@@ -7,7 +7,8 @@
 #include <iostream>
 #include <cstdlib>
 #include <sstream>
-#include <condition_variable> 
+#include <vector>
+#include <functional>
 
 // SensorReader class constructor
 SensorReader::SensorReader(Logger& logger, const std::string& mode, std::atomic<bool>& running) 
@@ -189,80 +190,41 @@ bool SensorReader::parseFGData(const std::string& line, SensorData& data) {
     std::istringstream stream(line); // Create a string stream from the line
     std::string token;               // Variable to hold each token
 
-    // While there are tokens in the stream
+    // Define handlers for each prefix
+    static const std::vector<std::pair<std::string, std::function<void(const std::string&)>>> handlers = {
+        {"TF=", [&](const std::string& val) { data.temperature = std::stof(val); }},
+        {"A=",  [&](const std::string& val) { data.altitude = std::stof(val); }},
+        {"AGL=", [&](const std::string& val) { data.agl = std::stof(val); }},
+        {"V=",  [&](const std::string& val) { data.speed = std::stof(val); }},
+        {"VSF=", [&](const std::string& val) { data.verticalSpeed = std::stof(val) * 60; }},
+        {"ER=", [&](const std::string& val) { data.engineRPM = std::stof(val); }},
+        {"T=",  [&](const std::string& val) { data.throttle = std::stof(val); }},
+        {"OP=", [&](const std::string& val) { data.oilPressure = std::stof(val); }},
+        {"OT=", [&](const std::string& val) { data.oilTemperature = std::stof(val); }},
+        {"FCG=", [&](const std::string& val) { data.fuelCap = std::stof(val); }},
+        {"FFG=", [&](const std::string& val) { data.fuelFlow = std::stof(val); }},
+        {"PA=", [&](const std::string& val) { data.pitch = std::stof(val); }},
+        {"PR=", [&](const std::string& val) { data.pitchRate = std::stof(val); }},
+        {"RA=", [&](const std::string& val) { data.roll = std::stof(val); }},
+        {"RR=", [&](const std::string& val) { data.rollRate = std::stof(val); }},
+        {"YA=", [&](const std::string& val) { data.yaw = std::stof(val); }},
+        {"YR=", [&](const std::string& val) { data.yawRate = std::stof(val); }},
+    };
+
     while (stream >> token) {
-        // Check if the token starts with a known prefix and parse accordingly
-        
-        if (token.rfind("TF=", 0) == 0) { // Temperature in Fahrenheit
-            data.temperature = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("A=", 0) == 0) { // Altitude in feet
-            data.altitude = std::stof(token.substr(2));
-            parsed = true;
-        } 
-        else if (token.rfind("AGL=",0) == 0){
-            data.agl = std::stof(token.substr(4));
-            parsed = true;
-        }
-        else if (token.rfind("V=", 0) == 0) { // Speed in knots
-            data.speed = std::stof(token.substr(2));
-            parsed = true;
-        } 
-        else if (token.rfind("VSF=", 0) == 0) { // Vertical speed in feet per second
-            // Convert from feet per second to feet per minute
-            data.verticalSpeed = std::stof(token.substr(4)) * 60; 
-            parsed = true;
-        } 
-        else if (token.rfind("ER=", 0) == 0) { // Engine RPM
-            data.engineRPM = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("T=", 0) == 0) { // Throttle position (0-100%)
-            data.throttle = std::stof(token.substr(2));
-            parsed = true;
-        } 
-        else if (token.rfind("OP=", 0) == 0) { // Oil pressure in psi
-            data.oilPressure = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("OT=", 0) == 0) { // Oil temperature in Fahrenheit
-            data.oilTemperature = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("FCG=", 0) == 0) { // Fuel capacity in gallons
-            data.fuelCap = std::stof(token.substr(4));
-            parsed = true;
-        } 
-        else if (token.rfind("FFG=", 0) == 0) { // Fuel flow in gallons per hour
-            data.fuelFlow = std::stof(token.substr(4));
-            parsed = true;
-        } 
-        else if (token.rfind("PA=", 0) == 0) { // Pitch angle in degrees
-            data.pitch = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("PR=", 0) == 0) { // Pitch rate in degrees per second
-            data.pitchRate = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("RA=", 0) == 0) { // Roll angle in degrees
-            data.roll = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("RR=", 0) == 0) { // Roll rate in degrees per second
-            data.rollRate = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("YA=", 0) == 0) { // Yaw angle in degrees
-            data.yaw = std::stof(token.substr(3));
-            parsed = true;
-        } 
-        else if (token.rfind("YR=", 0) == 0) { // Yaw rate in degrees per second
-            data.yawRate = std::stof(token.substr(3));
-            parsed = true;
+        for (const auto& [prefix, handler] : handlers) {
+            if (token.rfind(prefix, 0) == 0) {
+                try {
+                    handler(token.substr(prefix.size()));
+                    parsed = true;
+                } catch (const std::exception& e) {
+                    std::cerr << "Failed to parse token: " << token << " (" << e.what() << ")\n";
+                }
+                break;
+            }
         }
     }
+    
     // If any of the expected fields were parsed, return true
     return parsed;
 }// End of parseFGData

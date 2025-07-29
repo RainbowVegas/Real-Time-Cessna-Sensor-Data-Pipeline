@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     //Init gui
     GUI gui;
     if (!gui.init()) return -1;
-
+    
     // Check if the correct number of arguments is provided
     if (argc < 2) {
         // Print usage instructions if no arguments are provided

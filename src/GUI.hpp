@@ -42,9 +42,27 @@ public:
         latestData = data;
         latestAlerts = alerts;
     }  
+
     GLFWwindow* window;
 
 private:
+    // Time config
+    double startTime = 0.0;
+    static constexpr float HISTORY = 10.0f;
+
+    // Thead-safe shared data
+    std::mutex dataMutex;
+    SensorData latestData;
+    AlertFlags latestAlerts;
+
+    // Buffers for graphs 
+    ScrollingBuffer altitudeBuff;
+    ScrollingBuffer speedBuff;
+    ScrollingBuffer vertSpeedBuff;
+    ScrollingBuffer engineRPMBuff;
+    ScrollingBuffer oilPressureBuff;
+    ScrollingBuffer fuelFlowBuff; 
+
     // Graphing funcs
     void drawAltitudeGraph(double currTime);
     void drawSpeedGraph(double currTime);
@@ -53,25 +71,8 @@ private:
     void drawOilPresGraph(double currTime);
     void drawFuelFlowGraph(double currTime);
 
-    // Text data func
+    // Gui helper funcs
     void drawTextData();
-
-    // Anomilies 
     void drawAnomilies();
-    void DrawAlertLine(const char* label, bool triggered);
-
-    std::mutex dataMutex;
-
-    double startTime = 0.0;
-    static constexpr float HISTORY = 10.0f;
-
-    SensorData latestData;
-    AlertFlags latestAlerts;
-
-    ScrollingBuffer altitudeBuff;
-    ScrollingBuffer speedBuff;
-    ScrollingBuffer vertSpeedBuff;
-    ScrollingBuffer engineRPMBuff;
-    ScrollingBuffer oilPressureBuff;
-    ScrollingBuffer fuelFlowBuff;  
+    void DrawAlertLine(const char* label, bool triggered); 
 };
