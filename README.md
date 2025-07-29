@@ -10,13 +10,11 @@ A multithreaded, real-time sensor data simulation, ingestion, and logging system
 - CSV logging with timestamps
 - Basic anomaly detection (e.g., RPM, pitch rate)
 - Thread-safe queue and condition variable system
+- Real-time plotting using Dear ImGui and ImPlot
 
 ## Planned Features
-- Real-time plotting using Dear ImGui and ImPlot
 - Visual alerts for abnormal sensor behavior
-- Refined threshold logic for anomaly detection
-- Machine learning integration for early warning signals
-- Aircraft profile selection support (e.g., Cessna, Boeing)
+- Refined threshold logic for anomaly detection - still have to make improvements
 
 ## Dependencies
 - C++17
