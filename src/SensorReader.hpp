@@ -1,6 +1,7 @@
 #pragma once
 #include "SensorData.hpp"
 #include "AlertFlags.hpp"
+#include "AlertManager.hpp"
 #include "Logger.hpp"
 #include <queue>
 #include <mutex>
@@ -27,9 +28,12 @@ public:
         return latestAlerts;
     }
 
+    void stop();
+
 private:
     SensorData latestData;
     AlertFlags latestAlerts;
+    AlertManager manager;
 
     bool parseFGData(const std::string& line, SensorData& data);
     std::queue<SensorData> dataQueue;

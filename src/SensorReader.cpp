@@ -253,7 +253,8 @@ void SensorReader::analyzeData() {
             // Unlock mutex
             lock.unlock();  // Allow generateData to keep pushing while logging
             // Log the data
-            AlertFlags alerts = logger.logSensorData(data);
+            AlertFlags alerts = manager.evaluate(data);
+            logger.logSensorData(data, alerts);
             // Log to GUI
             {
                 std::lock_guard<std::mutex> latestDataLock(dataMutex);
@@ -266,4 +267,12 @@ void SensorReader::analyzeData() {
     }
 
     std::cout << "[SensorReader] Data analysis stopped.\n";
-}// End of analyzeDatap
+}// End of analyzeData
+
+void SensorReader::stop() {
+    running = false;              // tell threads to exit
+    {
+        std::lock_guard<std::mutex> lock(mtx); // lock the same mutex used by analyzeData
+        cv.notify_all();                       // wake up all threads waiting on cv
+    }
+}

@@ -312,6 +312,7 @@ void GUI::drawAnomilies() {
 
     // Altitude
     DrawAlertLine("Above Altitude Ceiling", latestAlerts.aboveAltitudeCeiling);
+    DrawAlertLine("Eextreme Altitude Drop", latestAlerts.extremeAltitudeDrop);
 
     ImGui::Spacing();
 
@@ -319,12 +320,15 @@ void GUI::drawAnomilies() {
     DrawAlertLine("Stall Speed", latestAlerts.stallSpeed);
     DrawAlertLine("Over Max Speed", latestAlerts.overMaxSpeed);
     DrawAlertLine("Over Safe Vert Speed", latestAlerts.overSafeVerticalSpeed);
+    DrawAlertLine("Rapid Speed Decrease", latestAlerts.rapidSpeedDecrease);
+    DrawAlertLine("Rapid Speed Increase", latestAlerts.rapidSpeedIncrease);
 
     ImGui::Spacing();
 
     // Engine
     DrawAlertLine("Low Engine RPM", latestAlerts.lowEngineRPM);
     DrawAlertLine("High Engine RPM", latestAlerts.highEngineRPM);
+    DrawAlertLine("Longterm High RPMS", latestAlerts.longTermHighEngineRPM);
 
     ImGui::Spacing();
 
@@ -332,6 +336,7 @@ void GUI::drawAnomilies() {
     DrawAlertLine("High Oil Temperature", latestAlerts.highOilTemp);
     DrawAlertLine("Low Oil Pressure", latestAlerts.lowOilPressure);
     DrawAlertLine("High Oil Pressure", latestAlerts.highOilPressure);
+    DrawAlertLine("Engine Failure", latestAlerts.engineFailure);
 
     ImGui::Spacing();
 
@@ -348,6 +353,7 @@ void GUI::drawAnomilies() {
     DrawAlertLine("Roll Exceeded", latestAlerts.rollExceeded);
     DrawAlertLine("Roll Rate Exceeded", latestAlerts.rollRateExceeded);
     DrawAlertLine("Yaw Rate Exceeded", latestAlerts.yawRateExceeded);
+    DrawAlertLine("Extreme Maneuvers", latestAlerts.extremeManeuvers);
 }
 
 // Helper to render a single alert line with color depending on status

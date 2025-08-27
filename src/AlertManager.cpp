@@ -1,12 +1,18 @@
 #include "AlertManager.hpp"
 #include "cmath"
+#include <iostream>
 
 // Method check data against threshold limit of the Cesna
 // and raise flags on bad checks
 AlertFlags AlertManager::evaluate(const SensorData& data){
     AlertFlags flags{};
-    using namespace Thresholds;
+    basicEval(data, flags);
+    trendEval(data, flags);
+    return flags;
+}
 
+using namespace Thresholds;
+void AlertManager::basicEval(const SensorData& data, AlertFlags& flags){
     // IF temperature is less than -23.8 C or greater than 104.0 C, flag
     if (data.temperature < OP_TEMP_LOW) flags.belowOperatingTemp = true;
     if (data.temperature > OP_TEMP_HIGH) flags.aboveOperatingTemp = true;
@@ -34,6 +40,10 @@ AlertFlags AlertManager::evaluate(const SensorData& data){
         if (data.oilPressure < OIL_PRESSURE_LOW) flags.lowOilPressure = true;
         if (data.oilPressure > OIL_PRESSURE_HIGH) flags.highOilPressure = true;
 
+        // IF oil temp is high and pressure is low add alert
+        if (data.oilPressure < OIL_PRESSURE_LOW && data.oilTemperature > OIL_TEMP_HIGH) 
+        flags.engineFailure = true;
+
         // IF fuel capacity is less than 6.0, add alert
         if (data.fuelCap < FUEL_CAP_LOW) flags.lowFuel = true;
 
@@ -54,5 +64,38 @@ AlertFlags AlertManager::evaluate(const SensorData& data){
         // IF abs of yaw rate is greater than 20.0, add alert
         if (abs(data.yawRate) > YAW_RATE_MAX) flags.yawRateExceeded = true;
     }
-    return flags;
+}
+
+void AlertManager::trendEval(const SensorData& newestData, AlertFlags& flags){
+    // IF history is full  
+    if (history.isFull()) {
+        auto oldestOpt = history.peakTail();
+        if (!oldestOpt) {
+            return; // no valid oldest data, bail out
+        }
+        const SensorData& oldestData = *oldestOpt;
+
+        // Get differences
+        double speedDelta    = newestData.speed    - oldestData.speed;
+        double altitudeDelta = newestData.altitude - oldestData.altitude;
+        double pitchDelta    = newestData.pitch    - oldestData.pitch;
+        double rollDelta     = newestData.roll     - oldestData.roll;
+        double yawDelta      = newestData.yawRate  - oldestData.yawRate;
+
+        if (speedDelta > SAFE_SPEED_INC)  flags.rapidSpeedIncrease = true;
+        if (speedDelta < SAFE_SPEED_DEC)  flags.rapidSpeedDecrease = true;
+
+        if (newestData.engineRPM > RPM_HIGH && newestData.engineRPM >= oldestData.engineRPM)
+            flags.longTermHighEngineRPM = true;
+
+        if (altitudeDelta <= -DANGEROUS_ALT_DROP) flags.extremeAltitudeDrop = true;
+
+        if (std::abs(pitchDelta) > EXTREME_PITCH_CHANGE ||
+            std::abs(rollDelta)  > EXTREME_ROLL_CHANGE  ||
+            std::abs(yawDelta)   > EXTREME_YAW_CHANGE) {
+            flags.extremeManeuvers = true;
+        }
+    }   
+    // Add data to history
+    history.write(newestData);
 }

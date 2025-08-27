@@ -1,5 +1,4 @@
 #include "Logger.hpp"
-#include "AlertManager.hpp"
 #include <iostream>
 #include <chrono>
 #include <ctime>
@@ -48,14 +47,19 @@ std::string Logger::alertFlagsToString(const AlertFlags& flags){
     if (flags.belowOperatingTemp)   oss << ",BELOW OP TEMP";
     if (flags.aboveOperatingTemp)   oss << ",ABOVE OP TEMP";
     if (flags.aboveAltitudeCeiling) oss << ",ABOVE ALT CEILING";
+    if (flags.extremeAltitudeDrop) oss << ",EXTREME ALT DROP";
     if (flags.stallSpeed) oss << ",STALL SPEED";
     if (flags.overMaxSpeed) oss << ",OVER MAXSPEED";
     if (flags.overSafeVerticalSpeed) oss << ",OVER SAFE VERTSPEED";
+    if (flags.rapidSpeedDecrease) oss << ",RAPID SPEED DECREASE";
+    if (flags.rapidSpeedIncrease) oss << ",RAPID SPEED INCREASE";
     if (flags.lowEngineRPM) oss << ",LOW ENGINE RPM";
     if (flags.highEngineRPM) oss << ",HIGH ENGINE RPM";
+    if (flags.longTermHighEngineRPM) oss << ",LONGTERM HIGH RPMS";
     if (flags.highOilTemp) oss << ",HIGH OIL TEMP";
     if (flags.lowOilPressure) oss << ",LOW OIL PRESSURE";
     if (flags.highOilPressure) oss << ",HIGH OIL PRESSURE";
+    if (flags.engineFailure) oss << ",ENGINE FALUIRE";
     if (flags.lowFuel) oss << ",LOW FUEL";
     if (flags.lowFuelFlow) oss << ",LOW FUEL FLOW";
     if (flags.highFuelFlow) oss << ",HIGH FUEL FLOW";
@@ -64,6 +68,7 @@ std::string Logger::alertFlagsToString(const AlertFlags& flags){
     if (flags.rollExceeded) oss << ",ROLL";
     if (flags.rollRateExceeded) oss << ",ROLL RATE";
     if (flags.yawRateExceeded) oss << ",YAW RATE";
+    if (flags.extremeManeuvers) oss << ",EXTREME MANEUVERS";
     
     //Return string
     return oss.str();
@@ -80,8 +85,8 @@ for temperature, altitude, speed, vertical speed, engine RPM, oil temperature,
 oil pressure, fuel capacity, fuel flow, pitch, and roll.
 If any of these thresholds are exceeded, an alert is added to the log entry.
 ----------------------------------------------------------------------------------------*/
-AlertFlags Logger::logSensorData(const SensorData& data) {
-    if (!output.is_open()) return AlertFlags{};
+void Logger::logSensorData(const SensorData& data, const AlertFlags& alerts) {
+    if (!output.is_open()) return;
     //std::cout << "[Logger] Logging data: Temp=" << data.temperature << ", Alt=" << data.altitude << std::endl;
 
     //Create output file with sensor data in CSV format
@@ -98,13 +103,8 @@ AlertFlags Logger::logSensorData(const SensorData& data) {
            << "," << data.roll << "," << data.rollRate
            << "," << data.yaw << "," << data.yawRate;             
 
-    AlertFlags alerts = AlertManager::evaluate(data);
-
     // Print a newline at the end of the log entry
     // std::endl flushes the output buffer making sure the log is displayed immediate
     output << alertFlagsToString(alerts) << std::endl;
     output.flush();
-
-    // Return alerts
-    return alerts;
 }// End of Logger::log
